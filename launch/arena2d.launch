@@ -1,0 +1,7 @@
+<launch>
+
+<node pkg="rospytro" type="path_solver.py" name="solver" />
+
+<node pkg="rviz" type="rviz" name="rviz" args="-d $(find rospytro)/launch/arena2d.rviz" />
+
+</launch>
