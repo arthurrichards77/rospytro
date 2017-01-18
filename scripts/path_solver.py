@@ -18,8 +18,8 @@ class PathSolver:
     B = np.eye(2)
     self.lt = pytro.ltraj.LTraj2DAvoid(A,B,5)
     self.lt.add2NormStageCost(np.zeros((2,2)),np.eye(2),Nc=11)
-    self.lt.addStatic2DObst(-2.5,-1.5,-2.5,1.5)
-    self.lt.addStatic2DObst(1.5,2.5,-1.5,2.5)
+    self.lt.addStatic2DObst(-1.0,0.0,1.0,2.0)
+    self.lt.addStatic2DObst(0.0,1.0,-2.0,-1.0)
     # default boundary conditions
     self.lt.setInitialState([0.0,0.0])
     self.lt.setTerminalState([1.0,1.0])
