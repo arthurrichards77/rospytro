@@ -1,0 +1,28 @@
+<launch>
+
+  <node pkg="rospytro" type="path_solver.py" name="solver" output="screen" />
+
+  <param name="default_trajectory_folder"  value="$(find rospytro)/launch" />
+  <node name="traj_gui" pkg="brl_drones" type="csv_trajectory_gui.py">
+    <remap from="/inp_traj" to="/traj" />
+  </node>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rospytro)/launch/virtual_drone.rviz"/>
+
+  <param name="use_gui" value="false"/>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <rosparam param="source_list">['target/joint_states']</rosparam>
+  </node>
+
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find brl_drones)/urdf/single_drone.urdf.xacro" />
+
+  <include file="$(find brl_drones)/launch/single_virtual.launch">
+    <arg name="drone_name" value="target" />
+    <arg name="use_panel" value="true" />
+  </include>
+
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 1 world base_link 100" />
+
+</launch>
