@@ -71,7 +71,13 @@ class PathSolver:
     marker_msg.action = Marker.DELETE # delete this marker
     self.marker_pub.publish(marker_msg)
 
+  def clear_all_boxes(self):
+    # wipe all plus ten, in case one just deleted
+    for ii in range(10+len(self.lt.boxes)):
+      self.del_obst_marker(ii)
+
   def pub_boxes(self):
+    self.clear_all_boxes()
     marker_msg = Marker()
     marker_msg.header.frame_id = 'world'
     marker_msg.ns = 'obstacles'
@@ -84,13 +90,11 @@ class PathSolver:
     marker_msg.scale.z = 1.0
     for bb in self.lt.boxes:
       marker_msg.id += 1
-      self.del_obst_marker(marker_msg.id)
       marker_msg.pose.position.x = 0.5*(bb[0]+bb[1])
       marker_msg.pose.position.y = 0.5*(bb[2]+bb[3])
       marker_msg.scale.x = bb[1]-bb[0]
       marker_msg.scale.y = bb[3]-bb[2]
       self.marker_pub.publish(marker_msg)
-    self.del_obst_marker(marker_msg.id+1)
 
   def pub_init(self):
     marker_msg = Marker()
