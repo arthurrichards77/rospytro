@@ -5,7 +5,7 @@ roslib.load_manifest('rospytro')
 import pytro.ltraj
 import numpy as np
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, PointStamped
 from visualization_msgs.msg import Marker
 
 class PathSolver:
@@ -27,6 +27,7 @@ class PathSolver:
     self.marker_pub = rospy.Publisher('marker',Marker,queue_size=10) # needs longer queue as msgs go in quick succession
     self.goal_sub = rospy.Subscriber('move_base_simple/goal',PoseStamped,self.new_goal)
     self.start_sub = rospy.Subscriber('initialpose',PoseWithCovarianceStamped,self.new_start)
+    self.click_sub = rospy.Subscriber('clicked_point',PointStamped,self.click_point)
 
   def solve(self):  
     # solve by PuLP default built-in solver
@@ -54,6 +55,22 @@ class PathSolver:
     self.lt.changeInitState([data.pose.pose.position.x,data.pose.pose.position.y])
     self.pub_problem()
 
+  def click_point(self,data):
+    # callback for PointStamped click point, for add or delete obstacle
+    del_box = self.lt.deleteObstByPoint([data.point.x, data.point.y])
+    if del_box>=0:
+        # need to clear the marker
+    	self.del_obst_marker(del_box)
+    self.pub_problem()
+
+  def del_obst_marker(self,box_id):
+    marker_msg = Marker()
+    marker_msg.header.frame_id = 'world'
+    marker_msg.ns = 'obstacles'
+    marker_msg.id = box_id
+    marker_msg.action = Marker.DELETE # delete this marker
+    self.marker_pub.publish(marker_msg)
+
   def pub_boxes(self):
     marker_msg = Marker()
     marker_msg.header.frame_id = 'world'
@@ -67,11 +84,13 @@ class PathSolver:
     marker_msg.scale.z = 1.0
     for bb in self.lt.boxes:
       marker_msg.id += 1
+      self.del_obst_marker(marker_msg.id)
       marker_msg.pose.position.x = 0.5*(bb[0]+bb[1])
       marker_msg.pose.position.y = 0.5*(bb[2]+bb[3])
       marker_msg.scale.x = bb[1]-bb[0]
       marker_msg.scale.y = bb[3]-bb[2]
       self.marker_pub.publish(marker_msg)
+    self.del_obst_marker(marker_msg.id+1)
 
   def pub_init(self):
     marker_msg = Marker()
