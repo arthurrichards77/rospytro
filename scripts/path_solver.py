@@ -39,6 +39,10 @@ class PathSolver:
     self.yaw_angle = rospy.get_param('traj_yaw_angle',0.0)
     # maximum number of obstacles
     self.max_boxes = 5
+    # flag for obstacle addition mode
+    # true if first corner clicked
+    self.add_mode = False
+    self.first_corner = [0.0,0.0]
     
   def solve(self):  
     # solve by PuLP default built-in solver
@@ -87,11 +91,27 @@ class PathSolver:
     self.pub_problem()
 
   def click_point(self,data):
+    print "CLICK"
+    print self.add_mode
     # callback for PointStamped click point, for add or delete obstacle
-    del_box = self.lt.deleteObstByPoint([data.point.x, data.point.y])
-    if del_box>=0:
-        # need to clear the marker
-    	self.del_obst_marker(del_box)
+    if self.add_mode == True:
+      # second corner click
+      second_corner = [data.point.x, data.point.y]
+      self.lt.addStatic2DObst(min(self.first_corner[0],second_corner[0]),
+                              max(self.first_corner[0],second_corner[0]),
+                              min(self.first_corner[1],second_corner[1]),
+                              max(self.first_corner[1],second_corner[1]))    
+      # back out of add mode
+      self.add_mode = False
+    else:
+      # first try delete
+      del_box = self.lt.deleteObstByPoint([data.point.x, data.point.y])
+      print del_box
+      if del_box<0:
+        # wasn't in a box - switch to add mode
+        self.add_mode = True
+        self.first_corner = [data.point.x, data.point.y]
+    # publish updated markers
     self.pub_problem()
 
   def del_obst_marker(self,box_id):
@@ -107,8 +127,23 @@ class PathSolver:
     for ii in range(10+len(self.lt.boxes)):
       self.del_obst_marker(ii)
 
+  def pub_ground(self):
+    marker_msg = Marker()
+    marker_msg.header.frame_id = 'world'
+    marker_msg.ns = 'ground'
+    marker_msg.type = Marker.CUBE
+    marker_msg.color.r = 0.0
+    marker_msg.color.g = 0.1
+    marker_msg.color.b = 0.0
+    marker_msg.color.a = 1.0
+    marker_msg.pose.position.z = -0.01
+    marker_msg.scale.z = 0.01
+    marker_msg.id = 1
+    marker_msg.scale.x = 6
+    marker_msg.scale.y = 6
+    self.marker_pub.publish(marker_msg)
+
   def pub_boxes(self):
-    self.clear_all_boxes()
     marker_msg = Marker()
     marker_msg.header.frame_id = 'world'
     marker_msg.ns = 'obstacles'
@@ -119,7 +154,7 @@ class PathSolver:
     marker_msg.color.a = 1.0
     marker_msg.scale.z = 1.0
     for ii in range(self.max_boxes):
-      marker_msg.id += ii
+      marker_msg.id = ii
       if ii<len(self.lt.boxes):
         bb = self.lt.boxes[ii]
         marker_msg.pose.position.x = 0.5*(bb[0]+bb[1])
@@ -165,10 +200,33 @@ class PathSolver:
     marker_msg.pose.position.y = self.lt.term_x[self.lt.ind_y]
     self.marker_pub.publish(marker_msg)
 
+  def pub_first_corner(self):
+    marker_msg = Marker()
+    marker_msg.header.frame_id = 'world'
+    marker_msg.ns = 'first_corner'
+    marker_msg.id = 0
+    marker_msg.type = Marker.SPHERE
+    marker_msg.color.r = 0.0
+    marker_msg.color.g = 1.0
+    marker_msg.color.b = 1.0
+    marker_msg.scale.x = 0.1
+    marker_msg.scale.y = 0.1
+    marker_msg.scale.z = 0.1
+    marker_msg.pose.position.x = self.first_corner[0]
+    marker_msg.pose.position.y = self.first_corner[1]
+    if self.add_mode == True:
+      marker_msg.color.a = 1.0
+    else:
+      marker_msg.color.a = 0.0
+    self.marker_pub.publish(marker_msg)
+
+
   def pub_problem(self):
     self.pub_boxes()
+    self.pub_ground()
     self.pub_init()
     self.pub_term()
+    self.pub_first_corner()
 
 if __name__=="__main__":
     ps = PathSolver()
