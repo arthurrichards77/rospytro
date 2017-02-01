@@ -37,6 +37,8 @@ class PathSolver:
     self.joint_prefix = rospy.get_param('joint_prefix','target_move_')
     self.turn_joint = rospy.get_param('turn_topic','target_turn_z')
     self.yaw_angle = rospy.get_param('traj_yaw_angle',0.0)
+    # maximum number of obstacles
+    self.max_boxes = 5
     
   def solve(self):  
     # solve by PuLP default built-in solver
@@ -110,19 +112,23 @@ class PathSolver:
     marker_msg = Marker()
     marker_msg.header.frame_id = 'world'
     marker_msg.ns = 'obstacles'
-    marker_msg.id = 0
     marker_msg.type = Marker.CUBE
     marker_msg.color.r = 1.0
     marker_msg.color.g = 0.0
     marker_msg.color.b = 0.0
     marker_msg.color.a = 1.0
     marker_msg.scale.z = 1.0
-    for bb in self.lt.boxes:
-      marker_msg.id += 1
-      marker_msg.pose.position.x = 0.5*(bb[0]+bb[1])
-      marker_msg.pose.position.y = 0.5*(bb[2]+bb[3])
-      marker_msg.scale.x = bb[1]-bb[0]
-      marker_msg.scale.y = bb[3]-bb[2]
+    for ii in range(self.max_boxes):
+      marker_msg.id += ii
+      if ii<len(self.lt.boxes):
+        bb = self.lt.boxes[ii]
+        marker_msg.pose.position.x = 0.5*(bb[0]+bb[1])
+        marker_msg.pose.position.y = 0.5*(bb[2]+bb[3])
+        marker_msg.scale.x = bb[1]-bb[0]
+        marker_msg.scale.y = bb[3]-bb[2]
+      else:
+        # make it transparent if no further boxes
+        marker_msg.color.a = 0.0
       self.marker_pub.publish(marker_msg)
 
   def pub_init(self):
