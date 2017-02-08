@@ -1,6 +1,8 @@
 <launch>
 
-  <node pkg="rospytro" type="path_solver.py" name="solver" output="screen" />
+  <node pkg="rospytro" type="path_solver.py" name="solver" output="screen">
+    <remap from="initialtransform" to="vicon/Archie/Archie" />
+  </node>
 
   <param name="default_trajectory_folder"  value="$(find rospytro)/launch" />
   <node name="traj_gui" pkg="brl_drones" type="csv_trajectory_gui.py">
@@ -39,14 +41,15 @@
     <param name="ctrl_drone_frame" type="string" value="vicon/Archie/Archie" />
     <param name="targ_drone_frame" type="string" value="target_hull" />
 
+    <param name="update_freq" type="double" value="50" />      
     <node pkg="brl_drones" name="control" type="drone_tf_follow.py">
       <param name="pitch/init_gains/kp" type="double" value="0.5" />
-      <param name="pitch/init_gains/ki" type="double" value="0.1" />
+      <param name="pitch/init_gains/ki" type="double" value="0.05" />
       <param name="pitch/init_gains/kd" type="double" value="0.25" />
       <param name="pitch/init_limits/upper" type="double" value="0.3" />
       <param name="pitch/init_limits/lower" type="double" value="-0.3" />
       <param name="roll/init_gains/kp" type="double" value="0.5" />
-      <param name="roll/init_gains/ki" type="double" value="0.1" />
+      <param name="roll/init_gains/ki" type="double" value="0.05" />
       <param name="roll/init_gains/kd" type="double" value="0.25" />
       <param name="roll/init_limits/upper" type="double" value="0.3" />
       <param name="roll/init_limits/lower" type="double" value="-0.3" />

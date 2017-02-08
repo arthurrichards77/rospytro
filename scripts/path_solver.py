@@ -5,7 +5,7 @@ roslib.load_manifest('rospytro')
 import pytro.ltraj
 import numpy as np
 from nav_msgs.msg import Path
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, PointStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, PointStamped, TransformStamped
 from visualization_msgs.msg import Marker
 from trajectory_msgs.msg import JointTrajectory,JointTrajectoryPoint
 from math import sqrt
@@ -30,6 +30,7 @@ class PathSolver:
     self.marker_pub = rospy.Publisher('marker',Marker,queue_size=10) # needs longer queue as msgs go in quick succession
     self.goal_sub = rospy.Subscriber('move_base_simple/goal',PoseStamped,self.new_goal)
     self.start_sub = rospy.Subscriber('initialpose',PoseWithCovarianceStamped,self.new_start)
+    self.start_tf_sub = rospy.Subscriber('initialtransform',TransformStamped,self.new_start_tf)
     self.click_sub = rospy.Subscriber('clicked_point',PointStamped,self.click_point)
     # parameters for trajectory publication
     self.speed = rospy.get_param('traj_speed',0.2)
@@ -88,6 +89,11 @@ class PathSolver:
   def new_start(self,data):
     # callback for PoseWithCovarianceStamped start point
     self.lt.changeInitState([data.pose.pose.position.x,data.pose.pose.position.y])
+    self.pub_problem()
+
+  def new_start_tf(self,data):
+    # callback for TransformStamped start point (e.g. from Vicon)
+    self.lt.changeInitState([data.transform.translation.x,data.transform.translation.y])
     self.pub_problem()
 
   def click_point(self,data):
