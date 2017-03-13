@@ -1,0 +1,5 @@
+<launch>
+
+<node pkg="rospytro" type="test.py" name="test" output="screen" />
+
+</launch>
