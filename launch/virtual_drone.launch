@@ -1,9 +1,12 @@
 <launch>
 
+  <arg name="pose_topic" default="/vicon/Thing/Thing" />
+
   <param name="joint_prefix" value="target_move_" />
   
   <node pkg="rospytro" type="path_solver.py" name="solver" output="screen">
     <remap from="/traj" to="/inp_traj" />
+    <remap from="initialtransform" to="$(arg pose_topic)" />
   </node>
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rospytro)/launch/virtual_drone.rviz"/>

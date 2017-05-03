@@ -1,0 +1,25 @@
+<launch>
+
+  <arg name="rcbridge_ip" default="192.168.10.172" />
+  <arg name="drone_frame" default="vicon/QAV_GREEN/QAV_GREEN" />
+
+  <!-- optional args: can turn on PID tuning -->
+  <arg name="tuning" default="False" />
+
+  <include file="$(find vicon_bridge)/launch/vicon.launch" />
+
+  <include file="$(find rospytro)/launch/virtual_drone.launch">
+    <arg name="pose_topic" value="$(arg drone_frame)" />
+  </include>
+
+  <param name="traj_height" value="1.6" />
+  <param name="traj_speed" value="0.5" />
+
+  <include file="$(find rcbridge)/launch/qav250_follow_tf.launch">
+    <arg name="drone_frame" value="$(arg drone_frame)"/>
+    <arg name="rcbridge_ip" value="$(arg rcbridge_ip)" />
+    <arg name="target_frame" value="target_hull" />
+    <arg name="tuning" value="$(arg tuning)" />
+  </include>
+
+</launch>

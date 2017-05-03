@@ -146,7 +146,7 @@ class PathSolver:
     marker_msg.scale.z = 0.01
     marker_msg.id = 1
     marker_msg.scale.x = 6
-    marker_msg.scale.y = 6
+    marker_msg.scale.y = 10
     self.marker_pub.publish(marker_msg)
 
   def pub_boxes(self):

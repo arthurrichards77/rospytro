@@ -1,0 +1,21 @@
+<launch>
+
+  <arg name="hull_tf" default="vicon/ardrone/ardrone" />
+  <arg name="drone_ip" default="192.168.10.74" />
+
+  <include file="$(find rospytro)/launch/virtual_drone.launch">
+    <arg name="pose_topic" value="$(arg hull_tf)" />
+  </include>
+
+  <include file="$(find brl_parrots)/launch/ardrone_follow_tf.launch">
+    <arg name="panel" value="True" />
+    <arg name="image" value="False" />
+    <arg name="drone_frame" value="$(arg hull_tf)"/>
+    <arg name="drone_ip" value="$(arg drone_ip)" />
+    <arg name="target_frame" value="target_hull" />
+    <arg name="drone_name" value="target" />
+  </include>
+
+  <include file="$(find vicon_bridge)/launch/vicon.launch" />
+
+</launch>
