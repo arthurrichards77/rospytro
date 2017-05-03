@@ -1,0 +1,3 @@
+[submodule "src/pytro"]
+	path = src/pytro
+	url = https://github.com/arthurrichards77/pytro.git
